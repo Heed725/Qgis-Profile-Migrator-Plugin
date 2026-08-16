@@ -1,0 +1,20 @@
+ci:
+  autofix_commit_msg: "Apply automatic pre-commit fixes"
+  autoupdate_commit_msg: "Update pre-commit hooks"
+  skip: []
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: mixed-line-ending
+        args: [--fix=lf]
