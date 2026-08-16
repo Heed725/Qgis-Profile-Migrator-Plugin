@@ -1,0 +1,74 @@
+name: Build and Release QGIS Plugin
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version without the v prefix
+        required: true
+        default: 1.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  validate-package-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.version || '1.1.0' }}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Validate Python syntax
+        run: python -m compileall -q qgis_profile_migrator
+
+      - name: Validate plugin metadata version
+        shell: bash
+        run: |
+          grep -Fx "version=${{ steps.version.outputs.version }}" qgis_profile_migrator/metadata.txt
+
+      - name: Build installable plugin ZIP
+        shell: bash
+        run: |
+          zip -r qgis_profile_migrator.zip qgis_profile_migrator \
+            -x '*/__pycache__/*' '*.pyc'
+          unzip -t qgis_profile_migrator.zip
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qgis-profile-migrator-${{ steps.version.outputs.version }}
+          path: qgis_profile_migrator.zip
+
+      - name: Create tag and GitHub release if missing
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "QGIS Profile Migrator $TAG"
+            git push origin "$TAG"
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" qgis_profile_migrator.zip --clobber
+          else
+            gh release create "$TAG" qgis_profile_migrator.zip \
+              --title "QGIS Profile Migrator $TAG" \
+              --notes-file RELEASE_NOTES.md
+          fi
