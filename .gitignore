@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+*.qgismigrate.zip
+qgis_profile_migrator.zip
+.DS_Store
+.idea/
+.vscode/
