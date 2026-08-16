@@ -1,0 +1,16 @@
+[general]
+name=QGIS Profile Migrator
+description=Export, inspect, and safely import QGIS settings, plugins, basemaps, colors, scripts, CRS definitions, and profile resources.
+version=1.1.0
+qgisMinimumVersion=3.22
+author=Hemed Lungo
+email=
+about=Moves selected parts of a configured QGIS profile into another QGIS installation using a portable archive with a JSON manifest and CSV inventory. Import supports preview and automatic backup.
+category=System
+icon=icon.svg
+experimental=False
+deprecated=False
+tracker=
+repository=
+homepage=
+tags=profile,migration,backup,settings,plugins,basemap,crs,processing
